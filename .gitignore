@@ -46,6 +46,10 @@ yarn-error.*
 .claude/
 .gemini/
 brain/
+skills-lock.json
+
+# Supabase Local & Temp CLI data
+supabase/.temp/
 
 # System & OS Files
 .DS_Store
