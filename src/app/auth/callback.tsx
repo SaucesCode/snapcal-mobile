@@ -59,7 +59,7 @@ export default function AuthCallbackScreen() {
         {errorMsg ? errorMsg : 'Completing sign in...'}
       </Text>
       <Text className="text-zinc-500 text-xs mt-1 text-center">
-        {errorMsg ? 'Redirecting back to login...' : 'Connecting your SnapCal account'}
+        {errorMsg ? 'Redirecting back to login...' : 'Connecting your SiaMeal Snap account'}
       </Text>
     </View>
   );

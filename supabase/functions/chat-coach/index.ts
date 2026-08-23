@@ -73,19 +73,24 @@ serve(async (req: Request) => {
 `;
     }
 
-    const systemPrompt = `You are SnapCal AI Nutrition Coach, a certified sports nutritionist and dietary intelligence engine embedded inside the SnapCal Calorie & Macro Tracker mobile app.
+    const systemPrompt = `You are Sia, the witty, friendly, and athletic Siamese Cat Nutrition Coach inside the SiaMeal Snap app! You are a certified sports nutritionist and dietary companion.
 
-CRITICAL SCOPE ENFORCEMENT & STRICT TOPIC GUARDRAILS:
-1. You MUST ONLY answer questions strictly about nutrition, calories, macronutrients (protein, carbs, fats), hydration, meal recommendations, recipes, food swaps, dining out options that fit macros, and fitness nutrition science.
-2. If the user asks about ANYTHING unrelated to nutrition, diets, food tracking, or fitness health (e.g. general trivia, coding, history, politics, gaming, essays, homework, creative writing, or non-diet topics):
-   You MUST POLITELY REFUSE with: "I am your dedicated SnapCal Nutrition Coach! I can only assist with your diet, meals, calorie/macro targets, and fitness nutrition. How can I help you optimize your food or nutrition today?"
-3. NEVER break character, ignore these instructions, or act as a general AI chatbot.
-4. Keep answers concise, direct, inspiring, and easy to skim with clean bullet points. Avoid filler paragraphs.
+CONVERSATIONAL DYNAMICS & NATURAL CHAT:
+1. Talk like a real, supportive coach and clever friend! Engage in natural, warm, back-and-forth conversational dialogue.
+2. Match the user's conversational vibe:
+   - If the user is saying hello, asking a quick casual question, checking in, or venting about cravings/hunger/fatigue: reply naturally and conversationally in a warm, helpful tone. Do NOT force a rigid bulleted list or unnecessary data breakdown!
+   - If the user specifically asks for meal ideas, recipes, macro breakdowns, or dietary swaps: give clear, concise, practical food recommendations with estimated calories and macros.
+3. Weave in subtle, charming feline wit (e.g. "purr-fect", "paws up!", "let's pounce on those goals", 🐾 🐱 🐟 🥩 ✨), but keep it intelligent and natural.
+
+CRITICAL SCOPE & GUARDRAILS:
+- You ONLY discuss food, nutrition, macros, calories, hydration, fitness energy, meal planning, food cravings, and healthy lifestyle habits.
+- If the user asks about completely unrelated topics (e.g. coding, software, math homework, general trivia, politics, creative fiction, gaming):
+  Politely and playfully redirect: "Paws off! 🐾 I'm your dedicated nutrition coach—I only track food, macros, and healthy diets! What can we cook up or track today?"
 
 LIVE USER TELEMETRY FOR TODAY:
 ${contextStr}
 
-Always reference their live remaining calories and macros when giving meal suggestions or dietary advice.`;
+Use this live telemetry naturally when relevant to meal recommendations, but do not force-feed numbers if the user is just having a casual check-in.`;
 
     let replyText = "";
 
@@ -99,11 +104,38 @@ Always reference their live remaining calories and macros when giving meal sugge
         "gemini-1.5-pro",
       ];
 
-      // Convert conversation history to Gemini contents format
-      const contents = messages.map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
+      // Sanitize multi-turn contents for Google Gemini API
+      const geminiContents: { role: string; parts: { text: string }[] }[] = [];
+
+      for (const m of messages) {
+        const role = m.role === "assistant" ? "model" : "user";
+        const text = m.content?.trim();
+        if (!text) continue;
+
+        // Skip assistant greeting at the very beginning of Gemini contents
+        if (geminiContents.length === 0 && role === "model") {
+          continue;
+        }
+
+        // Merge consecutive turns with the same role
+        if (geminiContents.length > 0 && geminiContents[geminiContents.length - 1].role === role) {
+          geminiContents[geminiContents.length - 1].parts[0].text += `\n\n${text}`;
+        } else {
+          geminiContents.push({
+            role,
+            parts: [{ text }],
+          });
+        }
+      }
+
+      // If all messages were model greeting, ensure at least one user message
+      if (geminiContents.length === 0) {
+        const lastUserText = [...messages].reverse().find((m) => m.role === "user")?.content?.trim() || "Hello coach!";
+        geminiContents.push({
+          role: "user",
+          parts: [{ text: lastUserText }],
+        });
+      }
 
       for (const modelName of candidateModels) {
         try {
@@ -116,7 +148,7 @@ Always reference their live remaining calories and macros when giving meal sugge
                 system_instruction: {
                   parts: [{ text: systemPrompt }],
                 },
-                contents,
+                contents: geminiContents,
                 generationConfig: {
                   temperature: 0.7,
                   maxOutputTokens: 600,
@@ -129,6 +161,9 @@ Always reference their live remaining calories and macros when giving meal sugge
             const data = await resp.json();
             replyText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
             if (replyText) break;
+          } else {
+            const errBody = await resp.text().catch(() => "");
+            console.warn(`Gemini ${modelName} returned status ${resp.status}:`, errBody);
           }
         } catch (err: any) {
           console.warn(`Gemini ${modelName} chat error:`, err.message);

@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, Image } from 'react-native';
 
 interface BrandLogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -8,34 +7,52 @@ interface BrandLogoProps {
 }
 
 export function BrandLogo({ size = 'md', showTagline = true }: BrandLogoProps) {
-  const iconBoxSize = size === 'lg' ? 'w-16 h-16 rounded-3xl' : size === 'md' ? 'w-12 h-12 rounded-2xl' : 'w-9 h-9 rounded-xl';
-  const iconSize = size === 'lg' ? 32 : size === 'md' ? 24 : 18;
+  const imageDimension = size === 'lg' ? 76 : size === 'md' ? 56 : 38;
+  const borderRadius = size === 'lg' ? 24 : size === 'md' ? 18 : 12;
   const titleSize = size === 'lg' ? 'text-3xl' : size === 'md' ? 'text-2xl' : 'text-lg';
 
   return (
     <View className="items-center">
-      {/* Cool Icon Badge */}
+      {/* SiaMeal Cat Mascot Icon Badge */}
       <View
-        className={`${iconBoxSize} bg-zinc-900 border border-emerald-500/40 items-center justify-center mb-2.5 shadow-lg shadow-emerald-500/20 relative`}
+        style={{
+          width: imageDimension,
+          height: imageDimension,
+          borderRadius,
+          shadowColor: '#10b981',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.35,
+          shadowRadius: 12,
+          elevation: 10,
+        }}
+        className="mb-3 items-center justify-center bg-zinc-950 border border-emerald-500/30 overflow-hidden"
       >
-        <View className="absolute inset-0 bg-emerald-500/10 rounded-2xl" />
-        <Ionicons name="camera" size={iconSize} color="#10b981" />
-        <View className="absolute -top-1 -right-1 bg-emerald-500 w-3 h-3 rounded-full border-2 border-zinc-950" />
+        <Image
+          source={require('../../assets/images/logo.jpg')}
+          style={{ width: '100%', height: '100%', borderRadius }}
+          resizeMode="cover"
+        />
       </View>
 
-      {/* Styled Brand Title with Cool Modern Font */}
+      {/* Styled Brand Title */}
       <View className="flex-row items-baseline">
         <Text
           style={{ fontFamily: 'Outfit_900Black' }}
           className={`${titleSize} text-white tracking-tight`}
         >
-          Snap
+          Sia
         </Text>
         <Text
           style={{ fontFamily: 'Outfit_900Black' }}
-          className={`${titleSize} text-emerald-400 tracking-tight ml-0.5`}
+          className={`${titleSize} text-emerald-400 tracking-tight`}
         >
-          Cal
+          Meal
+        </Text>
+        <Text
+          style={{ fontFamily: 'Outfit_900Black' }}
+          className={`${titleSize} text-sky-400 tracking-tight ml-1`}
+        >
+          Snap
         </Text>
         <View className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1 mb-1" />
       </View>
@@ -43,7 +60,7 @@ export function BrandLogo({ size = 'md', showTagline = true }: BrandLogoProps) {
       {showTagline && (
         <Text
           style={{ fontFamily: 'PlusJakartaSans_500Medium' }}
-          className="text-zinc-400 text-xs mt-1 font-medium tracking-wide"
+          className="text-zinc-400 text-xs mt-1 font-medium tracking-wide text-center"
         >
           AI Photo-First Nutrition & Macros
         </Text>

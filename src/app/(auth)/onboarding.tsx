@@ -670,7 +670,7 @@ export default function OnboardingScreen() {
               ) : (
                 <>
                   <Ionicons name="flash" size={18} color="#ffffff" />
-                  <Text className="text-white font-bold text-base">Start Tracking on SnapCal</Text>
+                  <Text className="text-white font-bold text-base">Start Tracking on SiaMeal Snap</Text>
                 </>
               )}
             </TouchableOpacity>

@@ -260,7 +260,7 @@ export default function ProfileScreen() {
 
   const handleSignOut = () => {
     hapticFeedback.medium();
-    Alert.alert('Sign Out', 'Are you sure you want to sign out of SnapCal?', [
+    Alert.alert('Sign Out', 'Are you sure you want to sign out of SiaMeal Snap?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out',
@@ -769,7 +769,7 @@ export default function ProfileScreen() {
                 <Ionicons name="log-out-outline" size={17} color="#fb7185" />
               </View>
               <View>
-                <Text className="text-rose-400 font-bold text-sm">Sign Out of SnapCal</Text>
+                <Text className="text-rose-400 font-bold text-sm">Sign Out of SiaMeal Snap</Text>
                 <Text className="text-zinc-500 text-xs font-medium mt-0.5">Securely log out of this device</Text>
               </View>
             </View>
@@ -780,7 +780,7 @@ export default function ProfileScreen() {
         {/* App Version Footer */}
         <View className="items-center pb-6">
           <Text className="text-zinc-600 text-xs font-semibold">
-            SnapCal AI v1.2.0 • Pro Edition
+            SiaMeal Snap v1.2.0 • Pro Edition
           </Text>
           <Text className="text-zinc-700 text-[10px] mt-1">
             Engineered with Precision & Science
@@ -1395,7 +1395,7 @@ export default function ProfileScreen() {
               <View className="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 mb-3">
                 <Text className="text-emerald-400 font-bold text-sm mb-1">Mifflin-St Jeor Formula</Text>
                 <Text className="text-zinc-400 text-xs leading-5">
-                  SnapCal uses the clinically validated Mifflin-St Jeor equation to compute your exact Basal Metabolic Rate (BMR) based on your sex, age, height, and weight.
+                  SiaMeal Snap uses the clinically validated Mifflin-St Jeor equation to compute your exact Basal Metabolic Rate (BMR) based on your sex, age, height, and weight.
                 </Text>
               </View>
 

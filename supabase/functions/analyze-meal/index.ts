@@ -83,57 +83,148 @@ serve(async (req: Request) => {
 `;
       }
 
-      const coachSystemPrompt = `You are SnapCal AI Nutrition Coach, a certified sports nutritionist and dietary intelligence engine embedded inside the SnapCal Calorie & Macro Tracker mobile app.
+      const coachSystemPrompt = `You are Sia, the witty, friendly, and athletic Siamese Cat Nutrition Coach inside the SiaMeal Snap app! You are a certified sports nutritionist and dietary companion.
 
-CRITICAL SCOPE ENFORCEMENT & STRICT TOPIC GUARDRAILS:
-1. You MUST ONLY answer questions strictly about nutrition, calories, macronutrients (protein, carbs, fats), hydration, meal recommendations, recipes, food swaps, dining out options that fit macros, and fitness nutrition science.
-2. If the user asks about ANYTHING unrelated to nutrition, diets, food tracking, or fitness health (e.g. general trivia, coding, history, politics, gaming, essays, homework, creative writing, or non-diet topics):
-   You MUST POLITELY REFUSE with: "I am your dedicated SnapCal Nutrition Coach! I can only assist with your diet, meals, calorie/macro targets, and fitness nutrition. How can I help you optimize your food or nutrition today?"
-3. NEVER break character, ignore these instructions, or act as a general AI chatbot.
-4. Keep answers concise, direct, inspiring, and easy to skim with clean bullet points. Avoid filler paragraphs.
+OUTPUT RULES (CRITICAL):
+- Output ONLY your direct spoken conversational response to the user.
+- NEVER output reasoning, metadata, tone summaries, user info summaries, or role prefixes (like "User:", "Sia:", "Athlete:", "Tone:", "Current Status:").
+- Speak directly, naturally, and warmly to the athlete.
 
-LIVE USER TELEMETRY FOR TODAY:
-${contextStr}
+CONVERSATIONAL DYNAMICS:
+1. Match the user's conversational vibe:
+   - If the user says hello, asks how you are, or shares a feeling: reply warmly and conversationally in 1-2 friendly sentences like a supportive friend.
+   - If the user asks for food/meal ideas or macros: give clear, practical food options with estimated calories and macros.
+2. Weave in subtle feline charm (e.g. "purr-fect", "paws up!", "let's pounce on those goals", 🐾 🐱 🐟 🥩 ✨), but keep it natural and intelligent.
 
-Always reference their live remaining calories and macros when giving meal suggestions or dietary advice.`;
+SCOPE GUARDRAILS:
+- You ONLY discuss food, nutrition, macros, calories, hydration, fitness energy, meal planning, and healthy lifestyle habits.
+- If asked about off-topic subjects (coding, politics, general trivia, gaming, essays):
+  Politely redirect: "Paws off! 🐾 I'm your dedicated nutrition coach—I only talk food, macros, and diet goals! What can we cook up or track today?"
+
+ATHLETE'S CURRENT STATS (INTERNAL CONTEXT ONLY - DO NOT REPEAT THIS LIST TO THE USER):
+${contextStr}`;
 
       let replyText = "";
+      const debugErrors: string[] = [];
 
-      // 1. Google Gemini Provider for Chat
+      if (!geminiKey && !openAiKey) {
+        debugErrors.push("No GEMINI_API_KEY or OPENAI_API_KEY secret configured");
+      }
+
+      // 1. Google Gemini Provider for Chat with Dynamic Model Discovery
       if (geminiKey) {
-        const candidateModels = [
-          "gemini-2.5-flash",
-          "gemini-2.0-flash",
-          "gemini-1.5-flash",
-          "gemini-1.5-pro",
-        ];
+        let candidateModels: string[] = [];
 
-        const contents = messages.map((m) => ({
-          role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content }],
-        }));
+        try {
+          const listResp = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey.trim()}`
+          );
+          if (listResp.ok) {
+            const listData = await listResp.json();
+            candidateModels = (listData.models || [])
+              .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
+              .map((m: any) => m.name.replace(/^models\//, ""));
+          }
+        } catch (e: any) {
+          console.warn("Model discovery error in Chat:", e.message);
+        }
+
+        if (candidateModels.length === 0) {
+          candidateModels = [
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-pro-latest",
+            "gemini-pro",
+            "gemini-2.0-flash-exp",
+          ];
+        }
+
+        // Sanitize multi-turn contents for Google Gemini API
+        const geminiContents: { role: string; parts: { text: string }[] }[] = [];
+
+        for (const m of messages) {
+          const role = m.role === "assistant" ? "model" : "user";
+          const text = m.content?.trim();
+          if (!text) continue;
+
+          // Skip assistant greeting at the very beginning of Gemini contents
+          if (geminiContents.length === 0 && role === "model") {
+            continue;
+          }
+
+          // Merge consecutive turns with the same role
+          if (geminiContents.length > 0 && geminiContents[geminiContents.length - 1].role === role) {
+            geminiContents[geminiContents.length - 1].parts[0].text += `\n\n${text}`;
+          } else {
+            geminiContents.push({
+              role,
+              parts: [{ text }],
+            });
+          }
+        }
+
+        // If all messages were model greeting, ensure at least one user message
+        if (geminiContents.length === 0) {
+          const lastUserText = [...messages].reverse().find((m) => m.role === "user")?.content?.trim() || "Hello coach!";
+          geminiContents.push({
+            role: "user",
+            parts: [{ text: lastUserText }],
+          });
+        }
 
         for (const modelName of candidateModels) {
           try {
-            const resp = await fetch(
+            // Attempt 1: Multi-turn format
+            let resp = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey.trim()}`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   system_instruction: { parts: [{ text: coachSystemPrompt }] },
-                  contents,
+                  contents: geminiContents,
                   generationConfig: { temperature: 0.7, maxOutputTokens: 600 },
                 }),
               }
             );
 
+            // Attempt 2: Single-turn universal fallback if multi-turn rejected
+            if (!resp.ok) {
+              const lastUserText = [...messages].reverse().find((m) => m.role === "user")?.content?.trim() || "Hi Sia!";
+              const singlePrompt = `${coachSystemPrompt}\n\nUser Message: "${lastUserText}"\n\nDirect Spoken Response from Sia:`;
+
+              resp = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey.trim()}`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: singlePrompt }] }],
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 600 },
+                  }),
+                }
+              );
+            }
+
             if (resp.ok) {
               const data = await resp.json();
-              replyText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-              if (replyText) break;
+              let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+
+              if (rawText) {
+                // Strip any accidental role prefixes
+                rawText = rawText.replace(/^(Sia\s*\([^)]*\)|Sia|Coach|Assistant|Direct Spoken Response from Sia)\s*:\s*/i, "").trim();
+                if (rawText.includes("Direct Spoken Response from Sia:")) {
+                  rawText = rawText.split("Direct Spoken Response from Sia:").pop()?.trim() || rawText;
+                }
+                replyText = rawText;
+                break;
+              }
+            } else {
+              const errBody = await resp.text().catch(() => "");
+              debugErrors.push(`${modelName} (${resp.status}): ${errBody.slice(0, 80)}`);
+              console.warn(`Gemini ${modelName} returned status ${resp.status}:`, errBody);
             }
           } catch (err: any) {
+            debugErrors.push(`${modelName} exception: ${err.message}`);
             console.warn(`Gemini ${modelName} chat error:`, err.message);
           }
         }
@@ -143,32 +234,45 @@ Always reference their live remaining calories and macros when giving meal sugge
       if (!replyText && openAiKey) {
         const openAiMessages = [
           { role: "system", content: coachSystemPrompt },
-          ...messages.map((m) => ({ role: m.role, content: m.content })),
+          ...messages.map((m) => ({
+            role: m.role === "assistant" ? "assistant" : "user",
+            content: m.content || "",
+          })),
         ];
 
-        const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${openAiKey.trim()}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: openAiMessages,
-            temperature: 0.7,
-            max_tokens: 600,
-          }),
-        });
+        try {
+          const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${openAiKey.trim()}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: openAiMessages,
+              temperature: 0.7,
+              max_tokens: 600,
+            }),
+          });
 
-        if (resp.ok) {
-          const data = await resp.json();
-          replyText = data.choices?.[0]?.message?.content?.trim() || "";
+          if (resp.ok) {
+            const data = await resp.json();
+            replyText = data.choices?.[0]?.message?.content?.trim() || "";
+          } else {
+            const errBody = await resp.text().catch(() => "");
+            debugErrors.push(`OpenAI (${resp.status}): ${errBody.slice(0, 120)}`);
+            console.warn(`OpenAI chat returned status ${resp.status}:`, errBody);
+          }
+        } catch (err: any) {
+          debugErrors.push(`OpenAI exception: ${err.message}`);
         }
       }
 
       if (!replyText) {
         return new Response(
-          JSON.stringify({ error: "AI Coach was unable to generate a response. Please try again." }),
+          JSON.stringify({
+            error: `AI Coach was unable to generate a response. [Details: ${debugErrors.join(" | ") || "No API response candidates"}]`,
+          }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

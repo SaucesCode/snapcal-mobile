@@ -28,7 +28,7 @@ export async function performGoogleOAuth() {
 
   // 2. Mobile Platforms (Custom Scheme Redirect)
   const redirectUrl = makeRedirectUri({
-    scheme: 'snapcal',
+    scheme: 'siamealsnap',
     path: 'auth/callback',
   });
 
@@ -108,7 +108,7 @@ export async function performGoogleOAuth() {
         (event.url.includes('code=') ||
           event.url.includes('access_token=') ||
           event.url.includes('auth/callback') ||
-          event.url.startsWith('snapcal://'))
+          event.url.startsWith('siamealsnap://'))
       ) {
         handleCallbackUrl(event.url);
       }

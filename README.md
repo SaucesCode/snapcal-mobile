@@ -1,4 +1,4 @@
-# SnapCal
+# SiaMeal Snap
 
 Mobile AI calorie tracker and nutrition intelligence platform. Snap meal photos or enter food in natural language to estimate calories, portions, and macronutrients in real time.
 

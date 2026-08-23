@@ -9,6 +9,7 @@ import {
   Platform,
   Keyboard,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { sendNutritionCoachMessage, ChatMessage, UserNutritionContext } from '../services/aiService';
@@ -103,7 +104,7 @@ export function AiNutritionCoachModal({
       const greeting: ChatMessage = {
         id: 'initial_greeting',
         role: 'assistant',
-        content: `Hey ${userContext.displayName || 'Athlete'}! I'm your dedicated SnapCal Nutrition Coach.\n\n📊 **Your Live Status Today:**\n• **${remainingCal} kcal** remaining\n• **${remainingProt}g protein** remaining\n\nAsk me for meal ideas, macro swaps, or dietary advice to hit your targets today!`,
+        content: `*Paws up!* 🐾 Hey ${userContext.displayName || 'Athlete'}, I'm **Sia**, your Siamese Nutrition Coach!\n\n📊 **Your Live Status Today:**\n• **${remainingCal} kcal** remaining\n• **${remainingProt}g protein** remaining\n\nTell me what you're craving or let me know if you need high-protein meal ideas to hit a purr-fect macro split today! 🐟🥩`,
         timestamp: new Date().toISOString(),
       };
       setMessages([greeting]);
@@ -245,15 +246,19 @@ export function AiNutritionCoachModal({
         {/* Header */}
         <View className="flex-row items-center justify-between pb-3 border-b border-zinc-800/80">
           <View className="flex-row items-center gap-2.5">
-            <View className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 items-center justify-center">
-              <Ionicons name="sparkles" size={16} color="#10b981" />
+            <View className="w-9 h-9 rounded-xl bg-zinc-950 border border-emerald-500/40 items-center justify-center overflow-hidden">
+              <Image
+                source={require('../../assets/images/logo.jpg')}
+                style={{ width: '100%', height: '100%', borderRadius: 12 }}
+                resizeMode="cover"
+              />
             </View>
             <View>
               <Text
                 style={{ fontFamily: 'Outfit_700Bold' }}
                 className="text-white text-base"
               >
-                SnapCal AI Coach
+                SiaMeal AI Coach
               </Text>
               <Text className="text-zinc-500 text-[10px] font-semibold">
                 Personalized Nutrition & Meal Guidance
@@ -303,8 +308,12 @@ export function AiNutritionCoachModal({
               className={`mb-3 flex-row ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {msg.role === 'assistant' && (
-                <View className="w-6 h-6 rounded-lg bg-emerald-500/20 items-center justify-center mr-2 mt-1">
-                  <Ionicons name="sparkles" size={12} color="#10b981" />
+                <View className="w-7 h-7 rounded-xl bg-zinc-950 border border-emerald-500/30 items-center justify-center mr-2 mt-1 overflow-hidden">
+                  <Image
+                    source={require('../../assets/images/logo.jpg')}
+                    style={{ width: '100%', height: '100%', borderRadius: 8 }}
+                    resizeMode="cover"
+                  />
                 </View>
               )}
 
@@ -322,8 +331,12 @@ export function AiNutritionCoachModal({
 
           {isTyping && (
             <View className="flex-row items-center gap-2 mb-3">
-              <View className="w-6 h-6 rounded-lg bg-emerald-500/20 items-center justify-center">
-                <Ionicons name="sparkles" size={12} color="#10b981" />
+              <View className="w-7 h-7 rounded-xl bg-zinc-950 border border-emerald-500/30 items-center justify-center overflow-hidden">
+                <Image
+                  source={require('../../assets/images/logo.jpg')}
+                  style={{ width: '100%', height: '100%', borderRadius: 8 }}
+                  resizeMode="cover"
+                />
               </View>
               <View className="bg-zinc-950 border border-zinc-800 p-3 rounded-2xl flex-row items-center gap-1.5">
                 <ActivityIndicator size="small" color="#10b981" />

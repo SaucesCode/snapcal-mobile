@@ -1,10 +1,18 @@
-import * as ImageManipulator from 'expo-image-manipulator';
 import { supabase } from '../lib/supabase';
-import { AnalyzeMealResponse } from '../types';
+import * as ImageManipulator from 'expo-image-manipulator';
+
+export interface AnalyzeMealResponse {
+  meal_name: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  ingredients: string[];
+}
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: string;
 }
@@ -29,54 +37,58 @@ export interface UserNutritionContext {
 }
 
 /**
- * Compresses an image strictly according to technical constraints:
- * - Max width/height of 512px
- * - JPEG quality 0.5
- * - Base64 encoded output
+ * Compresses an image to max 512px dimension, JPEG quality 0.5, and returns { uri, base64 }.
  */
-export async function compressImage(uri: string): Promise<{ base64: string; uri: string }> {
-  const manipResult = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: 512 } }],
-    {
-      compress: 0.5,
-      format: ImageManipulator.SaveFormat.JPEG,
-      base64: true,
-    }
-  );
-
-  if (!manipResult.base64) {
-    throw new Error('Failed to generate base64 representation of image');
+export async function compressImage(uri: string): Promise<{ uri: string; base64: string }> {
+  try {
+    const manipResult = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 512 } }],
+      { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+    );
+    return {
+      uri: manipResult.uri,
+      base64: manipResult.base64 || '',
+    };
+  } catch (error) {
+    console.error('Error compressing image:', error);
+    throw new Error('Failed to process meal image. Please try again.');
   }
-
-  return {
-    base64: manipResult.base64,
-    uri: manipResult.uri,
-  };
-}
-
-async function extractErrorMessage(error: any): Promise<string> {
-  let errorMsg = error?.message || 'Failed to communicate with AI';
-  if (error && 'context' in error && error.context) {
-    try {
-      const errorJson = await error.context.json();
-      errorMsg =
-        errorJson.error ||
-        errorJson.message ||
-        errorJson.details ||
-        JSON.stringify(errorJson);
-    } catch {
-      try {
-        const errorText = await error.context.text();
-        if (errorText) errorMsg = errorText;
-      } catch {}
-    }
-  }
-  return errorMsg;
 }
 
 /**
- * Sends compressed image base64 to Supabase Edge Function 'analyze-meal'
+ * Extracts a human-readable error message from various Supabase / Edge Function error formats.
+ */
+async function extractErrorMessage(error: any): Promise<string> {
+  if (!error) return 'An unexpected error occurred';
+
+  // 1. Check if error.context is a Response object (common in FunctionsHttpError)
+  if (error.context && typeof error.context.json === 'function') {
+    try {
+      const body = await error.context.json();
+      if (body.error) return body.error;
+      if (body.message) return body.message;
+    } catch {
+      // Body might be text instead of json
+      try {
+        const text = await error.context.text();
+        if (text) return text;
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  // 2. Standard error message
+  if (error.message) {
+    return error.message;
+  }
+
+  return String(error);
+}
+
+/**
+ * Sends compressed base64 image to Supabase Edge Function 'analyze-meal'
  */
 export async function analyzeMealPhoto(imageBase64: string): Promise<AnalyzeMealResponse> {
   const { data, error } = await supabase.functions.invoke('analyze-meal', {
@@ -110,26 +122,18 @@ export async function analyzeMealText(textDescription: string): Promise<AnalyzeM
 }
 
 /**
- * Sends conversation and user context to Supabase Edge Function 'analyze-meal'
- * Uses unified payload matching both updated and previous deployed Edge Function specs
+ * Sends conversation and user context to Supabase Edge Function 'analyze-meal' (Chat Mode)
  */
 export async function sendNutritionCoachMessage(
-  messages: { role: 'user' | 'assistant'; content: string }[],
+  messages: { role: 'user' | 'assistant' | 'system'; content: string }[],
   userContext: UserNutritionContext
 ): Promise<string> {
-  const lastUserMessage =
-    [...messages].reverse().find((m) => m.role === 'user')?.content ||
-    'Suggest meals according to my macros';
-
-  const telemetryContext = `[NUTRITION COACH QUERY: Athlete has ${userContext.remainingCalories ?? 2000} kcal and ${userContext.remainingProtein ?? 150}g protein remaining today for ${userContext.goal || 'Fitness'}. User asks: "${lastUserMessage}"]`;
-
   try {
     const { data, error } = await supabase.functions.invoke('analyze-meal', {
       body: {
         mode: 'chat',
         messages,
         userContext,
-        textDescription: telemetryContext,
       },
     });
 
@@ -143,23 +147,7 @@ export async function sendNutritionCoachMessage(
       return data.reply;
     }
 
-    if (data?.meal_name || data?.calories !== undefined) {
-      const title = data.meal_name || 'Nutrition Recommendation';
-      const cals = data.calories || 0;
-      const p = data.protein_g || 0;
-      const c = data.carbs_g || 0;
-      const f = data.fat_g || 0;
-      const items =
-        Array.isArray(data.ingredients) && data.ingredients.length > 0
-          ? data.ingredients.map((item: string) => `• ${item}`).join('\n')
-          : '';
-
-      return `💡 **${title}**\n\n📊 **Nutrient Breakdown:**\n• **${cals} kcal** | **${p}g Protein** | **${c}g Carbs** | **${f}g Fat**\n\n${
-        items ? `📝 **Meal Components:**\n${items}` : ''
-      }`;
-    }
-
-    return 'I am ready to help optimize your meals and macros.';
+    return 'Paws up! 🐾 I am ready to help with your meals and macros today!';
   } catch (err: any) {
     console.error('Chat Coach service error:', err);
     throw err;

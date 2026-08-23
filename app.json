@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "SnapCal",
-    "slug": "snapcal",
+    "name": "SiaMeal Snap",
+    "slug": "siameal-snap",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "snapcal",
+    "scheme": "siamealsnap",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.snapcal.app",
+      "bundleIdentifier": "com.siamealsnap.app",
       "icon": "./assets/expo.icon"
     },
     "android": {
-      "package": "com.snapcal.app",
+      "package": "com.siamealsnap.app",
       "adaptiveIcon": {
         "backgroundColor": "#09090b",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -34,7 +34,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "SnapCal needs camera access to photograph meals and analyze nutrition."
+          "cameraPermission": "SiaMeal Snap needs camera access to photograph meals and analyze nutrition."
         }
       ],
       [

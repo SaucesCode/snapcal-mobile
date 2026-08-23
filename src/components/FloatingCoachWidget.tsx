@@ -63,20 +63,25 @@ export function FloatingCoachWidget({ onPress, hasUnread = true }: FloatingCoach
             elevation: 12,
           }}
         >
-          {/* Inner Glowing Gradient Disc */}
+          {/* Inner Glowing Disc with SiaMeal Cat Mascot */}
           <View
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: '#10b981',
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              backgroundColor: '#09090b',
               alignItems: 'center',
               justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: '#34d399',
+              overflow: 'hidden',
+              borderWidth: 1.5,
+              borderColor: '#10b981',
             }}
           >
-            <Ionicons name="sparkles" size={22} color="#ffffff" />
+            <Animated.Image
+              source={require('../../assets/images/logo.jpg')}
+              style={{ width: '100%', height: '100%', borderRadius: 23 }}
+              resizeMode="cover"
+            />
           </View>
 
           {/* Active Status Badge Dot */}
