@@ -47,6 +47,9 @@ yarn-error.*
 .gemini/
 brain/
 skills-lock.json
+AGENTS.md
+CLAUDE.md
+GEMINI.md
 
 # Supabase Local & Temp CLI data
 supabase/.temp/
