@@ -23,7 +23,7 @@ import {
   generateWeeklyCoachingInsights,
   calculateMacroEnergySplit,
 } from '../../utils/nutritionInsights';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Meal, MealType } from '../../types';
 import { hapticFeedback } from '../../utils/haptics';
 
@@ -33,16 +33,16 @@ const CARD_WIDTH = SCREEN_WIDTH - 40;
 interface CategoryHeaderConfig {
   type: MealType;
   title: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   color: string;
   badgeBg: string;
 }
 
 const CATEGORIES: CategoryHeaderConfig[] = [
-  { type: 'breakfast', title: 'Breakfast', icon: 'sunny-outline', color: '#f59e0b', badgeBg: 'bg-amber-500/10 border-amber-500/30' },
-  { type: 'lunch', title: 'Lunch', icon: 'restaurant-outline', color: '#10b981', badgeBg: 'bg-emerald-500/10 border-emerald-500/30' },
-  { type: 'dinner', title: 'Dinner', icon: 'moon-outline', color: '#818cf8', badgeBg: 'bg-indigo-500/10 border-indigo-500/30' },
-  { type: 'snack', title: 'Snacks & Extras', icon: 'nutrition-outline', color: '#06b6d4', badgeBg: 'bg-cyan-500/10 border-cyan-500/30' },
+  { type: 'breakfast', title: 'Breakfast', icon: 'cat', color: '#f59e0b', badgeBg: 'bg-amber-500/10 border-amber-500/30' },
+  { type: 'lunch', title: 'Lunch', icon: 'fish', color: '#10b981', badgeBg: 'bg-emerald-500/10 border-emerald-500/30' },
+  { type: 'dinner', title: 'Dinner', icon: 'weather-night', color: '#818cf8', badgeBg: 'bg-indigo-500/10 border-indigo-500/30' },
+  { type: 'snack', title: 'Snacks & Treats', icon: 'paw', color: '#06b6d4', badgeBg: 'bg-cyan-500/10 border-cyan-500/30' },
 ];
 
 export default function HistoryScreen() {
@@ -234,22 +234,22 @@ export default function HistoryScreen() {
             activeOpacity={0.8}
             className="bg-emerald-500/15 border border-emerald-500/40 px-3 py-1.5 rounded-2xl flex-row items-center gap-1.5 shadow-sm shadow-emerald-500/20"
           >
-            <Ionicons name="sparkles" size={13} color="#10b981" />
+            <MaterialCommunityIcons name="cat" size={14} color="#10b981" />
             <Text
               style={{ fontFamily: 'Outfit_800ExtraBold' }}
               className="text-emerald-400 text-xs"
             >
-              AI Coach
+              Sia Coach
             </Text>
           </TouchableOpacity>
 
-          <View className="bg-zinc-900 border border-zinc-800 px-2.5 py-1.5 rounded-2xl flex-row items-center gap-1.5">
-            <View className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <View className="bg-emerald-950/70 border border-emerald-700/50 px-2.5 py-1.5 rounded-2xl flex-row items-center gap-1.5">
+            <MaterialCommunityIcons name="paw" size={13} color="#10b981" />
             <Text
               style={{ fontFamily: 'Outfit_800ExtraBold' }}
-              className="text-white text-xs"
+              className="text-emerald-400 text-xs"
             >
-              {weeklySummary?.daysLogged || 0}/7d
+              {weeklySummary?.daysLogged || 0}/7d Logged
             </Text>
           </View>
         </View>
@@ -281,9 +281,9 @@ export default function HistoryScreen() {
         <View className="mb-5">
           <View className="flex-row items-center justify-between mb-2.5 px-1">
             <View className="flex-row items-center gap-1.5">
-              <Ionicons name="sparkles" size={14} color="#10b981" />
+              <Ionicons name="sparkles" size={13} color="#10b981" />
               <Text className="text-zinc-400 text-[10px] font-extrabold uppercase tracking-widest">
-                AI Coach Diagnostics
+                Sia Diagnostics & Tips
               </Text>
             </View>
             <Text className="text-zinc-500 text-[10px] font-bold">
@@ -584,7 +584,7 @@ export default function HistoryScreen() {
                   <View className="flex-row items-center justify-between mb-2 px-1">
                     <View className="flex-row items-center gap-2">
                       <View className={`w-6 h-6 rounded-lg ${section.badgeBg} items-center justify-center border`}>
-                        <Ionicons name={section.icon} size={13} color={section.color} />
+                        <MaterialCommunityIcons name={section.icon} size={13} color={section.color} />
                       </View>
                       <Text
                         style={{ fontFamily: 'Outfit_700Bold' }}
@@ -628,14 +628,12 @@ export default function HistoryScreen() {
         }}
       />
 
-      {/* AI Nutrition Coach Modal */}
-      {coachModalVisible && (
-        <AiNutritionCoachModal
-          visible={coachModalVisible}
-          onClose={() => setCoachModalVisible(false)}
-          userContext={coachUserContext}
-        />
-      )}
+      {/* AI Nutrition Coach Modal — always mounted so chat history persists */}
+      <AiNutritionCoachModal
+        visible={coachModalVisible}
+        onClose={() => setCoachModalVisible(false)}
+        userContext={coachUserContext}
+      />
     </SafeAreaView>
   );
 }

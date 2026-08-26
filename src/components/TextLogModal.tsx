@@ -23,10 +23,10 @@ interface TextLogModalProps {
 }
 
 const QUICK_SUGGESTIONS = [
-  { label: '🍳 Eggs & sourdough toast', text: '2 scrambled eggs with butter and 2 slices of sourdough toast' },
-  { label: '🍗 Chicken & rice bowl', text: '200g grilled chicken breast with 1 cup white rice and steamed broccoli' },
-  { label: '🥤 Whey protein shake', text: '1 scoop whey protein with 300ml almond milk and a banana' },
-  { label: '🥗 Salmon & avocado salad', text: 'Grilled salmon fillet with mixed greens, avocado, and olive oil' },
+  { label: 'Eggs & sourdough toast', text: '2 scrambled eggs with butter and 2 slices of sourdough toast' },
+  { label: 'Chicken & rice bowl', text: '200g grilled chicken breast with 1 cup white rice and steamed broccoli' },
+  { label: 'Whey protein shake', text: '1 scoop whey protein with 300ml almond milk and a banana' },
+  { label: 'Salmon & avocado salad', text: 'Grilled salmon fillet with mixed greens, avocado, and olive oil' },
 ];
 
 export function TextLogModal({

@@ -23,6 +23,8 @@ import { useAuthStore } from '../../stores/authStore';
 import { useWaterStore } from '../../stores/waterStore';
 import { hapticFeedback } from '../../utils/haptics';
 import { Ionicons } from '@expo/vector-icons';
+import SiaCatMascot from '../../components/SiaCatMascot';
+
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -195,15 +197,16 @@ export default function OnboardingScreen() {
           ========================================================================= */}
           {step === 1 && (
             <View>
-              <View className="mb-6">
+              <View className="mb-5 items-center">
+                <SiaCatMascot size={72} mood="idle" style={{ marginBottom: 10 }} />
                 <Text
                   style={{ fontFamily: 'Outfit_800ExtraBold' }}
-                  className="text-2xl text-white mb-1.5"
+                  className="text-2xl text-white mb-1 text-center"
                 >
                   Body Metrics
                 </Text>
-                <Text className="text-zinc-400 text-sm">
-                  We use Mifflin-St Jeor to calculate your basal metabolic rate (BMR).
+                <Text className="text-zinc-400 text-xs text-center px-4">
+                  Sia uses Mifflin-St Jeor to calculate your basal metabolic rate (BMR).
                 </Text>
               </View>
 
@@ -538,17 +541,15 @@ export default function OnboardingScreen() {
           {step === 5 && targets && (
             <View>
               <View className="mb-5 items-center">
-                <View className="w-14 h-14 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 items-center justify-center mb-3">
-                  <Ionicons name="sparkles-outline" size={26} color="#10b981" />
-                </View>
+                <SiaCatMascot size={78} mood="celebrating" style={{ marginBottom: 10 }} />
                 <Text
                   style={{ fontFamily: 'Outfit_900Black' }}
                   className="text-2xl text-white text-center"
                 >
-                  Personalized Blueprint
+                  Sia's Nutrition Blueprint
                 </Text>
-                <Text className="text-zinc-400 text-xs text-center mt-1">
-                  Scientifically calculated for your metabolic baseline.
+                <Text className="text-emerald-400 text-xs text-center font-medium mt-1">
+                  Scientifically calculated for your metabolic goals.
                 </Text>
               </View>
 

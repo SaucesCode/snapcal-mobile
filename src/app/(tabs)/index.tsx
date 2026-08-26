@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
@@ -23,14 +24,15 @@ import { AiNutritionCoachModal } from '../../components/AiNutritionCoachModal';
 import { FloatingCoachWidget } from '../../components/FloatingCoachWidget';
 import { ToastBanner, ToastConfig } from '../../components/ToastBanner';
 import { compressImage, analyzeMealPhoto } from '../../services/aiService';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Meal, MealType } from '../../types';
 import { hapticFeedback } from '../../utils/haptics';
+import SiaCatMascot from '../../components/SiaCatMascot';
 
 interface CategoryHeaderConfig {
   type: MealType;
   title: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   color: string;
   badgeBg: string;
 }
@@ -38,29 +40,29 @@ interface CategoryHeaderConfig {
 const CATEGORIES: CategoryHeaderConfig[] = [
   {
     type: 'breakfast',
-    title: 'Breakfast',
-    icon: 'sunny-outline',
+    title: 'Morning Pounce',
+    icon: 'cat',
     color: '#f59e0b',
     badgeBg: 'bg-amber-500/10 border-amber-500/30',
   },
   {
     type: 'lunch',
-    title: 'Lunch',
-    icon: 'restaurant-outline',
+    title: 'Midday Catch',
+    icon: 'fish',
     color: '#10b981',
     badgeBg: 'bg-emerald-500/10 border-emerald-500/30',
   },
   {
     type: 'dinner',
-    title: 'Dinner',
-    icon: 'moon-outline',
+    title: 'Night Prowl',
+    icon: 'weather-night',
     color: '#818cf8',
     badgeBg: 'bg-indigo-500/10 border-indigo-500/30',
   },
   {
     type: 'snack',
-    title: 'Snacks & Extras',
-    icon: 'nutrition-outline',
+    title: 'Paws & Treats',
+    icon: 'paw',
     color: '#06b6d4',
     badgeBg: 'bg-cyan-500/10 border-cyan-500/30',
   },
@@ -259,7 +261,7 @@ export default function DashboardScreen() {
         </View>
 
         <View className="flex-row items-center gap-2">
-          {/* AI Nutrition Coach Trigger */}
+          {/* Sia Cat Nutrition Coach Trigger */}
           <TouchableOpacity
             onPress={() => {
               hapticFeedback.medium();
@@ -268,23 +270,23 @@ export default function DashboardScreen() {
             activeOpacity={0.8}
             className="bg-emerald-500/15 border border-emerald-500/40 px-3 py-1.5 rounded-2xl flex-row items-center gap-1.5 shadow-sm shadow-emerald-500/20"
           >
-            <Ionicons name="sparkles" size={14} color="#10b981" />
+            <MaterialCommunityIcons name="cat" size={15} color="#10b981" />
             <Text
               style={{ fontFamily: 'Outfit_800ExtraBold' }}
               className="text-emerald-400 text-xs"
             >
-              AI Coach
+              Sia Coach
             </Text>
           </TouchableOpacity>
 
-          {/* Streak Flame Badge */}
-          <View className="bg-amber-950/60 border border-amber-800/50 px-2.5 py-1.5 rounded-2xl flex-row items-center gap-1.5">
-            <Ionicons name="flame" size={15} color="#f59e0b" />
+          {/* Feline Streak Badge */}
+          <View className="bg-emerald-950/70 border border-emerald-700/50 px-2.5 py-1.5 rounded-2xl flex-row items-center gap-1.5">
+            <MaterialCommunityIcons name="paw" size={13} color="#10b981" />
             <Text
               style={{ fontFamily: 'Outfit_900Black' }}
-              className="text-amber-400 text-xs"
+              className="text-emerald-400 text-xs"
             >
-              {streakDays}d
+              {streakDays}d Streak
             </Text>
           </View>
         </View>
@@ -353,9 +355,9 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* 3. Two Prominent Action Cards */}
-        <View className="flex-row gap-3 mb-6">
-          {/* AI Camera Scan */}
+        {/* 3. High-Velocity Cyber-Feline Action Strip */}
+        <View className="flex-row gap-3 mb-5">
+          {/* Sia Optical Food Scan */}
           <TouchableOpacity
             onPress={() => {
               hapticFeedback.light();
@@ -364,16 +366,20 @@ export default function DashboardScreen() {
             activeOpacity={0.8}
             className="flex-1 bg-emerald-500 active:bg-emerald-600 rounded-3xl p-4 flex-row items-center gap-3 shadow-lg shadow-emerald-500/25"
           >
-            <View className="w-10 h-10 rounded-2xl bg-white/20 items-center justify-center">
-              <Ionicons name="camera" size={20} color="#ffffff" />
+            <View className="w-10 h-10 rounded-2xl bg-zinc-950/25 border border-white/20 items-center justify-center">
+              <MaterialCommunityIcons name="camera-iris" size={22} color="#ffffff" />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-extrabold text-sm">AI Food Scan</Text>
-              <Text className="text-white/80 text-xs font-semibold mt-0.5">Point & track macros</Text>
+              <Text style={{ fontFamily: 'Outfit_800ExtraBold' }} className="text-white text-sm">
+                Sia Vision Scan
+              </Text>
+              <Text className="text-white/80 text-[11px] font-semibold mt-0.5">
+                Point camera & track
+              </Text>
             </View>
           </TouchableOpacity>
 
-          {/* Text Log */}
+          {/* Sia Natural Language Text Log */}
           <TouchableOpacity
             onPress={() => {
               hapticFeedback.light();
@@ -383,11 +389,15 @@ export default function DashboardScreen() {
             className="flex-1 bg-zinc-900/90 border border-zinc-800/90 rounded-3xl p-4 flex-row items-center gap-3 shadow-md shadow-black"
           >
             <View className="w-10 h-10 rounded-2xl bg-purple-500/15 items-center justify-center border border-purple-500/30">
-              <Ionicons name="sparkles-outline" size={18} color="#c084fc" />
+              <MaterialCommunityIcons name="text-box-edit-outline" size={19} color="#c084fc" />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-extrabold text-sm">Text Entry</Text>
-              <Text className="text-zinc-400 text-xs font-medium mt-0.5">Type what you ate</Text>
+              <Text style={{ fontFamily: 'Outfit_800ExtraBold' }} className="text-white text-sm">
+                Sia Text Log
+              </Text>
+              <Text className="text-zinc-400 text-[11px] font-medium mt-0.5">
+                Type what you ate
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -408,7 +418,7 @@ export default function DashboardScreen() {
                     <View
                       className={`w-7 h-7 rounded-xl ${section.badgeBg} items-center justify-center border`}
                     >
-                      <Ionicons name={section.icon} size={14} color={section.color} />
+                      <MaterialCommunityIcons name={section.icon} size={15} color={section.color} />
                     </View>
                     <Text
                       style={{ fontFamily: 'Outfit_700Bold' }}
@@ -458,13 +468,48 @@ export default function DashboardScreen() {
                       setActionSheetCategory(section);
                     }}
                     activeOpacity={0.7}
-                    className="border border-dashed border-zinc-800/90 bg-zinc-950/40 rounded-3xl py-3.5 px-4 flex-row items-center justify-between"
+                    className="border border-dashed border-zinc-800/90 bg-zinc-950/40 rounded-3xl py-4 px-4"
                   >
-                    <Text className="text-zinc-500 text-xs font-medium">
-                      No {section.title.toLowerCase()} logged yet
-                    </Text>
-                    <View className="bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/30">
-                      <Text className="text-emerald-400 text-xs font-bold">+ Log</Text>
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-3 flex-1 mr-2">
+                        {/* Sia cat mascot avatar image */}
+                        <View
+                          style={{ borderColor: section.color + '40', borderWidth: 1 }}
+                          className="w-9 h-9 rounded-2xl bg-zinc-900 items-center justify-center overflow-hidden"
+                        >
+                          <Image
+                            source={require('../../../assets/images/logo.jpg')}
+                            style={{ width: '100%', height: '100%', borderRadius: 12 }}
+                            resizeMode="cover"
+                          />
+                        </View>
+                        <View className="flex-1">
+                          <Text
+                            style={{ fontFamily: 'Outfit_700Bold', color: section.color }}
+                            className="text-xs"
+                          >
+                            Sia Coach
+                          </Text>
+                          <Text className="text-zinc-400 text-[11px] font-medium mt-0.5">
+                            {section.type === 'breakfast'
+                              ? "Nothing logged yet — fuel up for the day"
+                              : section.type === 'lunch'
+                              ? "Midday gap detected — log your lunch"
+                              : section.type === 'dinner'
+                              ? "Evening plate empty — log your dinner"
+                              : "Any snacks or extras to record?"}
+                          </Text>
+                        </View>
+                      </View>
+                      <View
+                        style={{ borderColor: section.color + '55', backgroundColor: section.color + '18' }}
+                        className="px-3 py-1.5 rounded-xl border flex-row items-center gap-1"
+                      >
+                        <Ionicons name="add" size={13} color={section.color} />
+                        <Text style={{ color: section.color, fontFamily: 'Outfit_800ExtraBold' }} className="text-xs">
+                          Log
+                        </Text>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 )}
@@ -527,14 +572,12 @@ export default function DashboardScreen() {
         }}
       />
 
-      {/* AI Nutrition Coach Modal */}
-      {coachModalVisible && (
-        <AiNutritionCoachModal
-          visible={coachModalVisible}
-          onClose={() => setCoachModalVisible(false)}
-          userContext={coachUserContext}
-        />
-      )}
+      {/* AI Nutrition Coach Modal — always mounted so chat history persists */}
+      <AiNutritionCoachModal
+        visible={coachModalVisible}
+        onClose={() => setCoachModalVisible(false)}
+        userContext={coachUserContext}
+      />
     </SafeAreaView>
   );
 }

@@ -294,9 +294,13 @@ export default function ProfileScreen() {
         </View>
 
         <View className="flex-row items-center gap-2">
-          <View className="bg-emerald-950/70 border border-emerald-800/60 px-2.5 py-1 rounded-xl">
-            <Text className="text-emerald-400 text-[10px] font-extrabold uppercase">
-              Pro Member
+          <View className="bg-emerald-950/70 border border-emerald-500/50 px-3 py-1.5 rounded-2xl flex-row items-center gap-1.5 shadow-sm shadow-emerald-500/10">
+            <View className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <Text
+              style={{ fontFamily: 'Outfit_800ExtraBold' }}
+              className="text-emerald-400 text-[10px] uppercase tracking-wider"
+            >
+              Sia Club Athlete
             </Text>
           </View>
         </View>
@@ -708,16 +712,16 @@ export default function ProfileScreen() {
             className="flex-row items-center justify-between p-4 border-t border-zinc-800/60"
           >
             <View className="flex-row items-center gap-3">
-              <View className="w-8 h-8 rounded-xl bg-indigo-500/15 items-center justify-center">
-                <Ionicons name="flask-outline" size={16} color="#818cf8" />
+              <View className="w-8 h-8 rounded-xl bg-emerald-500/15 items-center justify-center">
+                <Ionicons name="calculator-outline" size={16} color="#10b981" />
               </View>
               <View>
-                <Text className="text-zinc-400 text-[10px] font-bold uppercase">Nutrition Science Guide</Text>
+                <Text className="text-zinc-400 text-[10px] font-bold uppercase">Nutrition Math Engine</Text>
                 <Text
                   style={{ fontFamily: 'Outfit_700Bold' }}
                   className="text-white text-sm mt-0.5"
                 >
-                  Mifflin-St Jeor Engine
+                  Sia Metabolic Engine (Mifflin-St Jeor)
                 </Text>
               </View>
             </View>

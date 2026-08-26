@@ -252,9 +252,14 @@ export function MealDetailModal({ meal, visible, onClose }: MealDetailModalProps
 
             {/* Calories & Macros Grid */}
             <View className="bg-zinc-950/90 border border-zinc-800/90 rounded-2xl p-4 mb-4">
-              <Text className="text-zinc-400 text-[10px] font-bold uppercase mb-3 tracking-wider">
-                Nutritional Breakdown
-              </Text>
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
+                  Sia Nutritional Calibration
+                </Text>
+                <View className="bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                  <Text className="text-emerald-400 text-[9px] font-bold uppercase">Verified</Text>
+                </View>
+              </View>
 
               {isEditing ? (
                 <View className="gap-3">

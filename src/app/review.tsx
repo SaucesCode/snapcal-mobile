@@ -135,12 +135,31 @@ export default function ReviewScreen() {
         className="flex-1"
       >
         <ScrollView className="flex-1 px-5 pt-4" showsVerticalScrollIndicator={false}>
-          {/* AI Banner Notice */}
-          <View className="bg-emerald-950/40 border border-emerald-800/40 rounded-2xl p-3 flex-row items-center gap-2 mb-4">
-            <Ionicons name="sparkles-outline" size={16} color="#10b981" />
-            <Text className="text-emerald-400 text-xs font-medium flex-1">
-              AI estimated portions and macros. Adjust any values below before logging.
-            </Text>
+          {/* Sia Vision Intelligence Card */}
+          <View className="bg-zinc-900/90 border border-emerald-500/30 rounded-3xl p-3.5 flex-row items-center gap-3 mb-4 shadow-sm shadow-emerald-500/10">
+            <View className="w-10 h-10 rounded-2xl bg-zinc-950 border border-emerald-500/40 items-center justify-center overflow-hidden">
+              <Image
+                source={require('../../assets/images/logo.jpg')}
+                style={{ width: '100%', height: '100%', borderRadius: 12 }}
+                resizeMode="cover"
+              />
+            </View>
+            <View className="flex-1">
+              <View className="flex-row items-center gap-1.5 mb-0.5">
+                <Text
+                  style={{ fontFamily: 'Outfit_700Bold' }}
+                  className="text-white text-xs"
+                >
+                  Sia Vision Estimate
+                </Text>
+                <View className="bg-emerald-500/20 px-1.5 py-0.2 rounded-md border border-emerald-500/40">
+                  <Text className="text-emerald-400 text-[9px] font-extrabold uppercase">Calibrated</Text>
+                </View>
+              </View>
+              <Text className="text-zinc-400 text-[11px] font-medium leading-4">
+                Estimated from visual scanning. Adjust portions or ingredients before logging.
+              </Text>
+            </View>
           </View>
 
           {/* Photo Thumbnail if available */}

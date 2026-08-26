@@ -1,8 +1,91 @@
 import React from 'react';
 import { Tabs, Redirect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { View, Platform } from 'react-native';
+import Svg, { Circle, Ellipse, Path, Line, Rect, G } from 'react-native-svg';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../stores/authStore';
+
+// --- Custom Cat-Themed Tab Icons ---
+
+/** Dashboard: minimal 2D cat face */
+function CatFaceIcon({ color = '#71717a', size = 22 }: { color?: any; size?: number }) {
+  const c = color as any;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Head */}
+      <Ellipse cx="12" cy="13" rx="8" ry="7" stroke={c} strokeWidth="1.6" fill="none" />
+      {/* Left ear */}
+      <Path d="M6 8 L4 3 L9 6.5 Z" stroke={c} strokeWidth="1.4" fill="none" strokeLinejoin="round" />
+      {/* Right ear */}
+      <Path d="M18 8 L20 3 L15 6.5 Z" stroke={c} strokeWidth="1.4" fill="none" strokeLinejoin="round" />
+      {/* Left eye (normal dot) */}
+      <Circle cx="9.5" cy="12.5" r="1.1" fill={c} />
+      {/* Right eye (camera aperture: outer circle + inner dot) */}
+      <Circle cx="14.5" cy="12.5" r="1.8" stroke={c} strokeWidth="1.2" fill="none" />
+      <Circle cx="14.5" cy="12.5" r="0.7" fill={c} />
+      {/* Nose */}
+      <Path d="M11.3 15.2 L12 14.4 L12.7 15.2 Z" fill={c} />
+      {/* Mouth */}
+      <Path d="M10.5 16 Q12 17.2 13.5 16" stroke={c} strokeWidth="1.1" fill="none" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** Hydration: fish outline */
+function FishIcon({ color = '#71717a', size = 23 }: { color?: any; size?: number }) {
+  const c = color as any;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Body */}
+      <Ellipse cx="10.5" cy="12" rx="7.5" ry="4.5" stroke={c} strokeWidth="1.5" fill="none" />
+      {/* Tail */}
+      <Path d="M18 12 L22 8 L22 16 Z" stroke={c} strokeWidth="1.5" fill="none" strokeLinejoin="round" />
+      {/* Eye */}
+      <Circle cx="6.5" cy="11.2" r="1" fill={c} />
+      {/* Fin */}
+      <Path d="M10 7.8 Q12 5.5 14 7.8" stroke={c} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** Analytics: paw bar chart */
+function PawChartIcon({ color = '#71717a', size = 22 }: { color?: any; size?: number }) {
+  const c = color as any;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Bars */}
+      <Rect x="2" y="14" width="4" height="7" rx="1" stroke={c} strokeWidth="1.5" fill="none" />
+      <Rect x="8" y="9" width="4" height="12" rx="1" stroke={c} strokeWidth="1.5" fill="none" />
+      <Rect x="14" y="5" width="4" height="16" rx="1" stroke={c} strokeWidth="1.5" fill="none" />
+      {/* Tiny paw dot on top bar */}
+      <Circle cx="16" cy="3.2" r="1.3" fill={c} />
+      <Circle cx="13.8" cy="2.2" r="0.85" fill={c} />
+      <Circle cx="18.2" cy="2.2" r="0.85" fill={c} />
+    </Svg>
+  );
+}
+
+/** Profile: sitting cat silhouette outline */
+function SittingCatIcon({ color = '#71717a', size = 22 }: { color?: any; size?: number }) {
+  const c = color as any;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Body oval */}
+      <Ellipse cx="12" cy="16" rx="5.5" ry="5" stroke={c} strokeWidth="1.5" fill="none" />
+      {/* Head */}
+      <Circle cx="12" cy="7.5" r="4" stroke={c} strokeWidth="1.5" fill="none" />
+      {/* Left ear */}
+      <Path d="M8.5 5 L7 2 L10.5 4.2 Z" stroke={c} strokeWidth="1.3" fill="none" strokeLinejoin="round" />
+      {/* Right ear */}
+      <Path d="M15.5 5 L17 2 L13.5 4.2 Z" stroke={c} strokeWidth="1.3" fill="none" strokeLinejoin="round" />
+      {/* Eyes */}
+      <Circle cx="10.2" cy="7.3" r="0.9" fill={c} />
+      <Circle cx="13.8" cy="7.3" r="0.9" fill={c} />
+      {/* Tail curling from body */}
+      <Path d="M17 19 Q21 17 20 13 Q19 10 17 11" stroke={c} strokeWidth="1.4" fill="none" strokeLinecap="round" />
+    </Svg>
+  );
+}
 
 export default function TabLayout() {
   const { session, profile, isInitialized } = useAuthStore();
@@ -43,37 +126,27 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* 1. Dashboard */}
+      {/* 1. Dashboard — cat face */}
       <Tabs.Screen
         name="index"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'grid' : 'grid-outline'}
-              size={22}
-              color={color}
-            />
-          ),
+          tabBarIcon: ({ color }) => <CatFaceIcon color={color} />,
         }}
       />
 
-      {/* 2. Hydration */}
+      {/* 2. Hydration — fish */}
       <Tabs.Screen
         name="water"
         options={{
           title: 'Hydration',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'water' : 'water-outline'}
-              size={23}
-              color={focused ? '#06b6d4' : color}
-            />
+          tabBarIcon: ({ focused }) => (
+            <FishIcon color={focused ? '#06b6d4' : '#71717a'} />
           ),
         }}
       />
 
-      {/* 3. Center Camera Aperture Shutter (Pro Floating Pedestal) */}
+      {/* 3. Center Camera — floating aperture pedestal (unchanged) */}
       <Tabs.Screen
         name="camera"
         options={{
@@ -117,35 +190,24 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 4. History */}
+      {/* 4. Analytics — paw bar chart */}
       <Tabs.Screen
         name="history"
         options={{
           title: 'Analytics',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'bar-chart' : 'bar-chart-outline'}
-              size={22}
-              color={color}
-            />
-          ),
+          tabBarIcon: ({ color }) => <PawChartIcon color={color} />,
         }}
       />
 
-      {/* 5. Profile & Goals */}
+      {/* 5. Profile — sitting cat */}
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? 'person' : 'person-outline'}
-              size={22}
-              color={color}
-            />
-          ),
+          tabBarIcon: ({ color }) => <SittingCatIcon color={color} />,
         }}
       />
     </Tabs>
   );
 }
+

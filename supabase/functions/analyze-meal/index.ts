@@ -69,52 +69,102 @@ serve(async (req: Request) => {
         );
       }
 
-      let contextStr = "User profile: Standard Athlete.\n";
+      // ── Rich context block injected into every request ──────────────────────
+      let contextBlock = "No athlete profile provided.";
       if (userContext) {
-        contextStr = `
-- User Name: ${userContext.displayName || 'Athlete'}
-- Fitness Objective: ${userContext.goal || 'Fat Loss / Maintenance'}
-- Diet Style: ${userContext.dietType || 'Balanced'}
-- Daily Calorie Target: ${userContext.targetCalories || 2000} kcal (Consumed: ${userContext.consumedCalories || 0} kcal | Remaining: ${userContext.remainingCalories ?? 2000} kcal)
-- Protein Target: ${userContext.targetProtein || 150}g (Consumed: ${userContext.consumedProtein || 0}g | Remaining: ${userContext.remainingProtein ?? 150}g)
-- Carbs Target: ${userContext.targetCarbs || 200}g (Consumed: ${userContext.consumedCarbs || 0}g | Remaining: ${userContext.remainingCarbs ?? 200}g)
-- Fat Target: ${userContext.targetFat || 65}g (Consumed: ${userContext.consumedFat || 0}g | Remaining: ${userContext.remainingFat ?? 65}g)
-- Meals Logged Today: ${userContext.todayMeals && userContext.todayMeals.length > 0 ? userContext.todayMeals.join(", ") : "None logged yet"}
-`;
+        const uc = userContext;
+        const mealsStr = uc.todayMeals?.length
+          ? uc.todayMeals.join(", ")
+          : "Nothing logged yet";
+
+        contextBlock = [
+          `ATHLETE: ${uc.displayName || "Athlete"}`,
+          `GOAL: ${uc.goal || "Maintenance"} | DIET: ${uc.dietType || "Balanced"}`,
+          `TARGETS TODAY → Calories: ${uc.targetCalories ?? "?"}kcal | Protein: ${uc.targetProtein ?? "?"}g | Carbs: ${uc.targetCarbs ?? "?"}g | Fat: ${uc.targetFat ?? "?"}g`,
+          `CONSUMED    → Calories: ${uc.consumedCalories ?? 0}kcal | Protein: ${uc.consumedProtein ?? 0}g | Carbs: ${uc.consumedCarbs ?? 0}g | Fat: ${uc.consumedFat ?? 0}g`,
+          `REMAINING   → Calories: ${uc.remainingCalories ?? uc.targetCalories ?? "?"}kcal | Protein: ${uc.remainingProtein ?? uc.targetProtein ?? "?"}g | Carbs: ${uc.remainingCarbs ?? uc.targetCarbs ?? "?"}g | Fat: ${uc.remainingFat ?? uc.targetFat ?? "?"}g`,
+          `MEALS LOGGED: ${mealsStr}`,
+        ].join("\n");
       }
 
-      const coachSystemPrompt = `You are Sia, the witty, friendly, and athletic Siamese Cat Nutrition Coach inside the SiaMeal Snap app! You are a certified sports nutritionist and dietary companion.
+      const coachSystemPrompt = `You are Sia — a sharp, no-nonsense Siamese cat sports nutritionist inside the SiaMeal app. You have the knowledge of a certified sports dietitian and the directness of a high-performance coach.
 
-OUTPUT RULES (CRITICAL):
-- Output ONLY your direct spoken conversational response to the user.
-- NEVER output reasoning, metadata, tone summaries, user info summaries, or role prefixes (like "User:", "Sia:", "Athlete:", "Tone:", "Current Status:").
-- Speak directly, naturally, and warmly to the athlete.
+━━ LIVE ATHLETE CONTEXT ━━
+${contextBlock}
 
-CONVERSATIONAL DYNAMICS:
-1. Match the user's conversational vibe:
-   - If the user says hello, asks how you are, or shares a feeling: reply warmly and conversationally in 1-2 friendly sentences like a supportive friend.
-   - If the user asks for food/meal ideas or macros: give clear, practical food options with estimated calories and macros.
-2. Weave in subtle feline charm (e.g. "purr-fect", "paws up!", "let's pounce on those goals", 🐾 🐱 🐟 🥩 ✨), but keep it natural and intelligent.
+━━ EXPERTISE ━━
+You are an expert in: calorie & macro tracking, body recomposition, muscle gain, fat loss, sports nutrition, meal timing, micronutrients, hydration, and food substitutions. You apply evidence-based principles (Mifflin-St Jeor TDEE, protein targets at 1.6–2.2g/kg for muscle, deficit/surplus pacing).
 
-SCOPE GUARDRAILS:
-- You ONLY discuss food, nutrition, macros, calories, hydration, fitness energy, meal planning, and healthy lifestyle habits.
-- If asked about off-topic subjects (coding, politics, general trivia, gaming, essays):
-  Politely redirect: "Paws off! 🐾 I'm your dedicated nutrition coach—I only talk food, macros, and diet goals! What can we cook up or track today?"
+━━ COACHING BEHAVIOUR ━━
+- Reference the athlete's ACTUAL remaining macros and logged meals when giving advice — make it personal.
+- Always give specific, actionable answers. Never vague non-answers.
+- If the athlete is low on protein, prioritise protein. If they are over calories, suggest light options.
+- Suggest real whole foods first, not supplements.
+- If a deficit is aggressive or a surplus is excessive, flag it once and move on — do not lecture.
+- Never shame the athlete for food choices. Be encouraging but honest.
+- When suggesting meals, include approximate macros (e.g., "~35g protein, ~400kcal").
+- For lists of meal ideas, limit to 3–5 options — do not dump 10+ options.
 
-ATHLETE'S CURRENT STATS (INTERNAL CONTEXT ONLY - DO NOT REPEAT THIS LIST TO THE USER):
-${contextStr}`;
+━━ RESPONSE FORMAT ━━
+- Keep replies concise: 2–5 sentences for simple questions, bullet points for meal lists or multi-step plans.
+- Use **bold** only for food names, key numbers, or critical warnings.
+- Always use numerals (27g, 2000kcal, 3 meals) — never spell out numbers as words.
+- No emojis. No sign-offs like "Hope this helps!" or "Feel free to ask!".
+- Do not start replies with "Great question" or any hollow filler phrase.
+- Do not repeat back what the athlete just said.
+
+━━ OUTPUT RULES (ABSOLUTE) ━━
+- Output ONLY your direct spoken reply. Nothing else.
+- NEVER include labels, headers, role tags, or internal metadata in your output.
+- NEVER re-state the athlete's profile stats unless directly asked.
+- NEVER break character.
+
+━━ SCOPE GUARDRAIL ━━
+- You only discuss: nutrition, food, macros, calories, hydration, meal planning, body composition, and food-related topics.
+- If asked about anything outside this scope, reply with one short sentence declining and redirect to nutrition.`;
+
+
+
+      function sanitizeCoachOutput(raw: string): string {
+        if (!raw) return "";
+        let text = raw.trim();
+
+        text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, "");
+        text = text.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, "");
+
+        // If output contains a role split marker, take the text after the last one
+        const markers = [
+          /(?:Direct Spoken Response(?: from Sia)?|Response from Sia|Sia's Response|Sia:\s*)/i,
+          /(?:Assistant:\s*|Model:\s*|Response:\s*|Output:\s*)/i,
+        ];
+        for (const m of markers) {
+          if (m.test(text)) {
+            const parts = text.split(m);
+            const tail = parts[parts.length - 1]?.trim();
+            if (tail) text = tail;
+          }
+        }
+
+        // Filter out any metadata lines
+        text = text
+          .split("\n")
+          .filter((line) => !/^(?:[-*•]\s*)?(?:\*\*)?(?:User|Athlete|Tone|Status|Telemetry|Context|Goal|Calories|Protein|Carbs|Fat|Meals|Scope|Sia)(?:\*\*)?\s*:/i.test(line.trim()))
+          .filter((line) => !/^(?:ATHLETE|INTERNAL CONTEXT|OUTPUT RULES|CONVERSATIONAL)/i.test(line.trim()))
+          .join("\n")
+          .trim();
+
+        text = text.replace(/^(?:Sia\s*\([^)]*\)|Sia|Assistant|Coach|Model)\s*:\s*/i, "").trim();
+        return text;
+      }
 
       let replyText = "";
       const debugErrors: string[] = [];
 
-      if (!geminiKey && !openAiKey) {
-        debugErrors.push("No GEMINI_API_KEY or OPENAI_API_KEY secret configured");
-      }
-
-      // 1. Google Gemini Provider for Chat with Dynamic Model Discovery
+      // 1. Google Gemini Provider — dynamic model discovery (same as analyze handler)
       if (geminiKey) {
         let candidateModels: string[] = [];
 
+        // Discover available models from the API first
         try {
           const listResp = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey.trim()}`
@@ -123,20 +173,32 @@ ${contextStr}`;
             const listData = await listResp.json();
             candidateModels = (listData.models || [])
               .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
-              .map((m: any) => m.name.replace(/^models\//, ""));
+              .map((m: any) => m.name.replace(/^models\//, ""))
+              // Prefer flash models; skip embedding / aqa / etc.
+              .filter((name: string) => /flash|pro/.test(name));
           }
         } catch (e: any) {
-          console.warn("Model discovery error in Chat:", e.message);
+          console.warn("Chat model discovery error:", e.message);
         }
 
+        // Fallback hardcoded list if discovery fails
         if (candidateModels.length === 0) {
           candidateModels = [
-            "gemini-1.5-flash-latest",
-            "gemini-1.5-pro-latest",
-            "gemini-pro",
-            "gemini-2.0-flash-exp",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
           ];
         }
+
+        // Sort: flash first, newest first (higher version numbers first)
+        candidateModels.sort((a, b) => {
+          const aFlash = a.includes("flash");
+          const bFlash = b.includes("flash");
+          if (aFlash && !bFlash) return -1;
+          if (!aFlash && bFlash) return 1;
+          // Within same tier, sort descending by version string
+          return b.localeCompare(a);
+        });
 
         // Sanitize multi-turn contents for Google Gemini API
         const geminiContents: { role: string; parts: { text: string }[] }[] = [];
@@ -173,7 +235,7 @@ ${contextStr}`;
 
         for (const modelName of candidateModels) {
           try {
-            // Attempt 1: Multi-turn format
+            // Attempt 1: Multi-turn format with system_instruction
             let resp = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey.trim()}`,
               {
@@ -187,10 +249,10 @@ ${contextStr}`;
               }
             );
 
-            // Attempt 2: Single-turn universal fallback if multi-turn rejected
+            // Attempt 2: Single-turn fallback if multi-turn rejected
             if (!resp.ok) {
               const lastUserText = [...messages].reverse().find((m) => m.role === "user")?.content?.trim() || "Hi Sia!";
-              const singlePrompt = `${coachSystemPrompt}\n\nUser Message: "${lastUserText}"\n\nDirect Spoken Response from Sia:`;
+              const singlePrompt = `${coachSystemPrompt}\n\nAthlete says: "${lastUserText}"\n\nRespond directly as Sia:`;
 
               resp = await fetch(
                 `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey.trim()}`,
@@ -207,15 +269,11 @@ ${contextStr}`;
 
             if (resp.ok) {
               const data = await resp.json();
-              let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+              const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+              const sanitized = sanitizeCoachOutput(rawText);
 
-              if (rawText) {
-                // Strip any accidental role prefixes
-                rawText = rawText.replace(/^(Sia\s*\([^)]*\)|Sia|Coach|Assistant|Direct Spoken Response from Sia)\s*:\s*/i, "").trim();
-                if (rawText.includes("Direct Spoken Response from Sia:")) {
-                  rawText = rawText.split("Direct Spoken Response from Sia:").pop()?.trim() || rawText;
-                }
-                replyText = rawText;
+              if (sanitized) {
+                replyText = sanitized;
                 break;
               }
             } else {
@@ -257,7 +315,8 @@ ${contextStr}`;
 
           if (resp.ok) {
             const data = await resp.json();
-            replyText = data.choices?.[0]?.message?.content?.trim() || "";
+            const rawContent = data.choices?.[0]?.message?.content || "";
+            replyText = sanitizeCoachOutput(rawContent);
           } else {
             const errBody = await resp.text().catch(() => "");
             debugErrors.push(`OpenAI (${resp.status}): ${errBody.slice(0, 120)}`);

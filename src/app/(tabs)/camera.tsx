@@ -315,8 +315,29 @@ export default function CameraScreen() {
           </View>
         </View>
 
-        {/* Center Scanner Reticle (in Barcode mode) */}
-        {scanMode === 'barcode' && (
+        {/* Center Scanner Reticle (in Photo & Barcode modes) */}
+        {scanMode === 'photo' ? (
+          <View className="items-center justify-center px-8 pointer-events-none">
+            <View className="w-72 h-72 rounded-3xl border border-dashed border-emerald-500/40 items-center justify-center bg-black/10 relative">
+              {/* Corner Targeting Accents */}
+              <View className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-emerald-400" />
+              <View className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-emerald-400" />
+              <View className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-emerald-400" />
+              <View className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-emerald-400" />
+
+              {/* Sia Center Reticle Tag */}
+              <View className="bg-black/75 px-3.5 py-1.5 rounded-full border border-emerald-500/40 flex-row items-center gap-1.5 shadow-sm shadow-emerald-500/20">
+                <Ionicons name="scan-outline" size={13} color="#10b981" />
+                <Text
+                  style={{ fontFamily: 'Outfit_700Bold' }}
+                  className="text-white text-[11px] tracking-wide"
+                >
+                  Sia Optical Scanner
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
           <View className="items-center justify-center px-8">
             <View className="w-64 h-48 border-2 border-emerald-400/80 rounded-3xl items-center justify-center bg-black/20 relative">
               <View className="w-full h-0.5 bg-emerald-400 shadow-lg shadow-emerald-400" />
@@ -383,15 +404,18 @@ export default function CameraScreen() {
       {isProcessing && (
         <View
           style={[StyleSheet.absoluteFill, { zIndex: 100, elevation: 100 }]}
-          className="bg-black/80 items-center justify-center px-8"
+          className="bg-black/85 items-center justify-center px-8"
         >
-          <View className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl items-center w-full max-w-xs shadow-2xl">
+          <View className="bg-zinc-900 border border-emerald-500/30 p-6 rounded-3xl items-center w-full max-w-xs shadow-2xl shadow-emerald-500/20">
             <ActivityIndicator size="large" color="#10b981" />
-            <Text className="text-white font-bold text-base mt-4 text-center">
+            <Text
+              style={{ fontFamily: 'Outfit_700Bold' }}
+              className="text-white text-base mt-4 text-center"
+            >
               {processingStatus}
             </Text>
-            <Text className="text-zinc-500 text-xs mt-1 text-center">
-              Fetching nutrition data...
+            <Text className="text-emerald-400 text-xs mt-1 text-center font-semibold">
+              Sia is estimating macronutrients...
             </Text>
           </View>
         </View>

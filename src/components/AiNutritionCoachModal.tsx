@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,17 @@ import {
   Keyboard,
   StyleSheet,
   Image,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { sendNutritionCoachMessage, ChatMessage, UserNutritionContext } from '../services/aiService';
+import {
+  sendNutritionCoachMessage,
+  cleanCoachReply,
+  ChatMessage,
+  UserNutritionContext,
+} from '../services/aiService';
 import { hapticFeedback } from '../utils/haptics';
+import { useCoachStore } from '../stores/coachStore';
 
 interface AiNutritionCoachModalProps {
   visible: boolean;
@@ -22,26 +29,29 @@ interface AiNutritionCoachModalProps {
 }
 
 const QUICK_PROMPTS = [
-  '🍲 What can I eat for dinner with my remaining macros?',
-  '🥩 High-protein snacks under 200 calories',
-  '🥗 Fast food meals that fit my calorie target',
-  '⚖️ Am I eating enough protein for muscle retention?',
-  '⚡ Quick pre-workout meal suggestion',
+  'High-protein meal ideas for my remaining calories',
+  'How is my macro split looking today?',
+  'Quick pre-workout meal suggestion',
+  'Low-calorie snacks under 150 kcal',
+  'Post-workout recovery meal ideas',
 ];
 
 /**
  * Parses markdown bold (**text**) and renders clean styled Text components
- * without showing raw markdown asterisks (**)
+ * without showing raw markdown asterisks (**) or stray metadata headers
  */
 function FormattedChatMessage({ content, isUser }: { content: string; isUser: boolean }) {
-  const lines = content.split('\n');
+  // Aggressively clean any metadata, telemetry dumps, thoughts, or prefixes
+  const cleanedContent = isUser ? content : cleanCoachReply(content);
+
+  const lines = cleanedContent.split('\n');
 
   return (
     <View>
       {lines.map((line, lineIndex) => {
         const trimmed = line.trim();
         const isBullet = trimmed.startsWith('•') || trimmed.startsWith('- ') || trimmed.startsWith('* ');
-        const isHeader = trimmed.startsWith('💡') || trimmed.startsWith('📊') || trimmed.startsWith('📝') || trimmed.startsWith('###');
+        const isHeader = trimmed.startsWith('###');
 
         // Split line by **bold** tokens
         const parts = line.split(/(\*\*.*?\*\*)/g);
@@ -90,26 +100,50 @@ export function AiNutritionCoachModal({
   onClose,
   userContext,
 }: AiNutritionCoachModalProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { messages, isLoaded, loadHistory, addMessage, setMessages, clearHistory } = useCoachStore();
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollViewRef = useRef<ScrollView | null>(null);
 
-  // Initialize greeting with live telemetry context
+  // Load persisted history once on mount
   useEffect(() => {
-    if (visible && messages.length === 0) {
+    loadHistory();
+  }, []);
+
+  // Inject greeting only when history is truly empty (new day or first ever open)
+  useEffect(() => {
+    if (visible && isLoaded && messages.length === 0) {
       const remainingCal = userContext.remainingCalories ?? 2000;
       const remainingProt = userContext.remainingProtein ?? 150;
       const greeting: ChatMessage = {
-        id: 'initial_greeting',
+        id: `greeting_${new Date().toISOString().split('T')[0]}`,
         role: 'assistant',
-        content: `*Paws up!* 🐾 Hey ${userContext.displayName || 'Athlete'}, I'm **Sia**, your Siamese Nutrition Coach!\n\n📊 **Your Live Status Today:**\n• **${remainingCal} kcal** remaining\n• **${remainingProt}g protein** remaining\n\nTell me what you're craving or let me know if you need high-protein meal ideas to hit a purr-fect macro split today! 🐟🥩`,
+        content: `Hey ${userContext.displayName || 'Athlete'}, I'm **Sia**, your Nutrition Coach.\n\n**Your Live Status Today:**\n• **${remainingCal} kcal** remaining\n• **${remainingProt}g protein** remaining\n\nTell me what you are craving or ask for high-protein meal ideas to hit your target macro split today.`,
         timestamp: new Date().toISOString(),
       };
       setMessages([greeting]);
     }
-  }, [visible]);
+  }, [visible, isLoaded]);
+
+  const handleClearHistory = useCallback(() => {
+    hapticFeedback.light();
+    Alert.alert(
+      'Clear Chat',
+      'Start a fresh conversation with Sia? Today\'s history will be deleted.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => {
+            hapticFeedback.error();
+            clearHistory();
+          },
+        },
+      ]
+    );
+  }, [clearHistory]);
 
   // Robust native keyboard listener for both iOS and Android
   useEffect(() => {
@@ -159,13 +193,12 @@ export function AiNutritionCoachModal({
       timestamp: new Date().toISOString(),
     };
 
-    const newHistory = [...messages, userMsg];
-    setMessages(newHistory);
+    await addMessage(userMsg);
     setInputText('');
     setIsTyping(true);
 
     try {
-      const conversationPayload = newHistory.map((m) => ({
+      const conversationPayload = [...messages, userMsg].map((m) => ({
         role: m.role,
         content: m.content,
       }));
@@ -180,20 +213,21 @@ export function AiNutritionCoachModal({
       };
 
       hapticFeedback.success();
-      setMessages([...newHistory, assistantMsg]);
+      await addMessage(assistantMsg);
     } catch (err: any) {
       hapticFeedback.error();
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `⚠️ ${err.message || 'Unable to connect with AI coach. Please try again.'}`,
+        content: `Error: ${err.message || 'Unable to connect with AI coach. Please try again.'}`,
         timestamp: new Date().toISOString(),
       };
-      setMessages([...newHistory, errorMsg]);
+      await addMessage(errorMsg);
     } finally {
       setIsTyping(false);
     }
   };
+
 
   const remainingCal = userContext.remainingCalories ?? 2000;
   const remainingProt = userContext.remainingProtein ?? 150;
@@ -258,24 +292,36 @@ export function AiNutritionCoachModal({
                 style={{ fontFamily: 'Outfit_700Bold' }}
                 className="text-white text-base"
               >
-                SiaMeal AI Coach
+                Sia Nutrition Intelligence
               </Text>
-              <Text className="text-zinc-500 text-[10px] font-semibold">
-                Personalized Nutrition & Meal Guidance
-              </Text>
+              <View className="flex-row items-center gap-1.5 mt-0.5">
+                <View className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <Text className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                  Sia is Active & Listening
+                </Text>
+              </View>
             </View>
           </View>
 
-          <TouchableOpacity
-            onPress={() => {
-              Keyboard.dismiss();
-              hapticFeedback.light();
-              onClose();
-            }}
-            className="w-8 h-8 rounded-full bg-zinc-800 items-center justify-center"
-          >
-            <Ionicons name="close" size={16} color="#a1a1aa" />
-          </TouchableOpacity>
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              onPress={handleClearHistory}
+              className="w-8 h-8 rounded-full bg-zinc-800 items-center justify-center"
+            >
+              <Ionicons name="trash-outline" size={14} color="#71717a" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                Keyboard.dismiss();
+                hapticFeedback.light();
+                onClose();
+              }}
+              className="w-8 h-8 rounded-full bg-zinc-800 items-center justify-center"
+            >
+              <Ionicons name="close" size={16} color="#a1a1aa" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Compact Telemetry Context Ribbon */}

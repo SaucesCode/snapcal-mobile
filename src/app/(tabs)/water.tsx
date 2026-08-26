@@ -16,15 +16,23 @@ import { useWaterStore } from '../../stores/waterStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ToastBanner, ToastConfig } from '../../components/ToastBanner';
 import { hapticFeedback } from '../../utils/haptics';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import SiaCatMascot from '../../components/SiaCatMascot';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const QUICK_AMOUNTS = [
-  { amount: 250, label: 'Glass', desc: '+250 ml', icon: 'water-outline' },
-  { amount: 500, label: 'Bottle', desc: '+500 ml', icon: 'water' },
-  { amount: 750, label: 'Flask', desc: '+750 ml', icon: 'flask-outline' },
-  { amount: 1000, label: 'Pitcher', desc: '+1.0 L', icon: 'beaker-outline' },
+interface QuickAmountOption {
+  amount: number;
+  label: string;
+  desc: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+}
+
+const QUICK_AMOUNTS: QuickAmountOption[] = [
+  { amount: 250, label: 'Kitten Bowl', desc: '+250 ml', icon: 'cat' },
+  { amount: 500, label: 'Cat Bottle', desc: '+500 ml', icon: 'water' },
+  { amount: 750, label: 'Hydra Flask', desc: '+750 ml', icon: 'flask' },
+  { amount: 1000, label: 'Pounce Pitcher', desc: '+1.0 L', icon: 'cup-water' },
 ];
 
 const GOAL_OPTIONS = [2000, 2500, 3000, 3500, 4000];
@@ -45,6 +53,9 @@ export default function WaterScreen() {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customMlText, setCustomMlText] = useState('350');
   const [toast, setToast] = useState<ToastConfig | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const celebrationAnim = useRef(new Animated.Value(0)).current;
+
 
   const effectiveGoal = profile?.target_water_ml || dailyGoalMl || 2500;
   const percentage = effectiveGoal > 0 ? Math.min(100, Math.round((todayMl / effectiveGoal) * 100)) : 0;
@@ -82,7 +93,30 @@ export default function WaterScreen() {
       message: `+${amount} ml added ${label ? `(${label})` : ''} • Today: ${newTotal.toFixed(1)}L / ${goalL}L`,
       type: 'water',
     });
+
+    // Trigger cat celebration if goal just reached
+    const newMl = todayMl + amount;
+    if (newMl >= effectiveGoal && todayMl < effectiveGoal) {
+      hapticFeedback.success();
+      setShowCelebration(true);
+      celebrationAnim.setValue(0);
+      Animated.spring(celebrationAnim, {
+        toValue: 1,
+        friction: 5,
+        tension: 80,
+        useNativeDriver: true,
+      }).start(() => {
+        setTimeout(() => {
+          Animated.timing(celebrationAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => setShowCelebration(false));
+        }, 2200);
+      });
+    }
   };
+
 
   const handleDeleteLog = async (id: string, amount: number) => {
     hapticFeedback.light();
@@ -119,6 +153,50 @@ export default function WaterScreen() {
 
       {/* Floating Dynamic Island Toast HUD */}
       <ToastBanner toast={toast} onDismiss={() => setToast(null)} />
+
+      {/* Hydration Goal Celebration Overlay */}
+      {showCelebration && (
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 99,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            transform: [{ scale: celebrationAnim }],
+            opacity: celebrationAnim,
+          }}
+          pointerEvents="none"
+        >
+          <View
+            style={{
+              backgroundColor: '#0c1a14',
+              borderWidth: 1.5,
+              borderColor: '#10b981',
+              borderRadius: 32,
+              paddingHorizontal: 36,
+              paddingVertical: 26,
+              alignItems: 'center',
+              shadowColor: '#10b981',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.5,
+              shadowRadius: 20,
+              elevation: 20,
+            }}
+          >
+            <SiaCatMascot size={64} mood="celebrating" style={{ marginBottom: 12 }} />
+            <Text style={{ fontFamily: 'Outfit_900Black', color: '#10b981', fontSize: 20, letterSpacing: -0.5 }}>
+              Daily Goal Achieved
+            </Text>
+            <Text style={{ color: '#6ee7b7', fontSize: 12, marginTop: 4, textAlign: 'center', fontWeight: '600' }}>
+              Target hydration completed for today
+            </Text>
+          </View>
+        </Animated.View>
+      )}
+
+
 
       {/* Header Bar */}
       <View className="px-5 pt-3 pb-3 border-b border-zinc-900 flex-row items-center justify-between">
@@ -211,23 +289,23 @@ export default function WaterScreen() {
             <View className="flex-row items-center gap-2">
               <View className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
               <Text className="text-zinc-400 text-[10px] font-extrabold uppercase tracking-widest">
-                Fluid Intake Status
+                Sia Fluid Matrix
               </Text>
             </View>
 
-            <View className="bg-zinc-950 px-2.5 py-1 rounded-xl border border-zinc-800 flex-row items-center gap-1.5">
-              <Ionicons
-                name={remainingMl <= 0 ? 'checkmark-circle' : 'water'}
+            <View className="bg-zinc-950 px-2.5 py-1 rounded-xl border border-cyan-500/30 flex-row items-center gap-1.5 shadow-sm shadow-cyan-500/10">
+              <MaterialCommunityIcons
+                name={remainingMl <= 0 ? 'paw' : 'water'}
                 size={12}
                 color={remainingMl <= 0 ? '#10b981' : '#06b6d4'}
               />
               <Text
-                style={{ fontFamily: 'Outfit_700Bold' }}
-                className={`text-[10px] uppercase ${
+                style={{ fontFamily: 'Outfit_800ExtraBold' }}
+                className={`text-[10px] uppercase tracking-wider ${
                   remainingMl <= 0 ? 'text-emerald-400' : 'text-cyan-400'
                 }`}
               >
-                {remainingMl <= 0 ? 'Target Achieved' : 'Hydrating'}
+                {remainingMl <= 0 ? 'Goal Mastered' : 'Purr-fect Pace'}
               </Text>
             </View>
           </View>
@@ -271,6 +349,9 @@ export default function WaterScreen() {
 
               {/* Central Radial Typography */}
               <View className="items-center justify-center">
+                <View className="mb-1 opacity-90">
+                  <MaterialCommunityIcons name="cat" size={20} color="#06b6d4" />
+                </View>
                 <Text
                   style={{ fontFamily: 'Outfit_900Black' }}
                   className="text-4xl text-white tracking-tight"
@@ -360,7 +441,7 @@ export default function WaterScreen() {
                 className="flex-1 bg-zinc-900/90 border border-zinc-800/90 active:border-cyan-500/60 p-3 rounded-2xl items-center justify-center shadow-sm shadow-black"
               >
                 <View className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 items-center justify-center mb-1.5">
-                  <Ionicons name={item.icon as any} size={18} color="#06b6d4" />
+                  <MaterialCommunityIcons name={item.icon} size={18} color="#06b6d4" />
                 </View>
                 <Text
                   style={{ fontFamily: 'Outfit_700Bold' }}

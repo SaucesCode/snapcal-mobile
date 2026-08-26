@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MealType } from '../types';
 import { hapticFeedback } from '../utils/haptics';
 
@@ -8,7 +8,7 @@ interface QuickLogActionSheetProps {
   visible: boolean;
   mealType: MealType;
   categoryTitle: string;
-  categoryIcon: keyof typeof Ionicons.glyphMap;
+  categoryIcon: keyof typeof MaterialCommunityIcons.glyphMap;
   categoryColor: string;
   categoryBadgeBg: string;
   onClose: () => void;
@@ -42,7 +42,7 @@ export function QuickLogActionSheet({
             <View
               className={`w-9 h-9 rounded-xl ${categoryBadgeBg} items-center justify-center border`}
             >
-              <Ionicons name={categoryIcon} size={18} color={categoryColor} />
+              <MaterialCommunityIcons name={categoryIcon} size={18} color={categoryColor} />
             </View>
             <View>
               <Text
